@@ -5,36 +5,38 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DocumentManagementSystem.Data
 {
-    public class ApplicationDBContext : IdentityDbContext<AppUser>
+    public class ApplicationDBContext : IdentityDbContext<User,Role,long,
+        IdentityUserClaim<long>,UserRole,IdentityUserLogin<long>,
+        IdentityRoleClaim<long>,IdentityUserToken<long>>
     {
-        public ApplicationDBContext(DbContextOptions dbContextOptions):base(dbContextOptions)
+        public ApplicationDBContext(DbContextOptions options) : base(options)
         {
-            
-        }
-       public  DbSet<DocManagementSystem>DocManagementSystems { get; set; }
 
+        }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-
-            List<IdentityRole> roles = new List<IdentityRole>
+            builder.Entity<UserRole>(userRole =>
             {
-                new IdentityRole
-                {
-                    Name="Admin",
-                    NormalizedName="ADMIN"
-                },
-                 new IdentityRole
-                {
-                    Name="User",
-                    NormalizedName="USER"
-                }
+                userRole.HasKey(u => new { u.RoleId, u.UserId });
+
+                userRole
+                .HasOne(u => u.Role)
+                .WithMany(u => u.UserRoles)
+                .HasForeignKey(u => u.RoleId)
+                .IsRequired();
+
+                userRole
+                .HasOne(u => u.User)
+                .WithMany(u => u.UserRoles)
+                .HasForeignKey(u => u.UserId)
+                .IsRequired();
+
+            });
 
 
-            };
-            builder.Entity<IdentityRole>().HasData(roles);
         }
     }
 }
