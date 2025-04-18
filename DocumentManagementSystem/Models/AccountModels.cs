@@ -27,7 +27,6 @@ public class Role : IdentityRole<long>
     public DateTime UpdateAt { get; set; } = DateTime.UtcNow;
     public virtual ICollection<UserRole> UserRoles { get; set; } = [];
 
-    public virtual ICollection<RoleClaim> RoleClaims { get; set; } = [];
 
 }
 
