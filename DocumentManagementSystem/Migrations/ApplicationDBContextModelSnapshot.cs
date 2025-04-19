@@ -22,6 +22,43 @@ namespace DocumentManagementSystem.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("DocumentManagementSystem.Model.MyFile", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Categories")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("file")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("userId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("userId");
+
+                    b.ToTable("MyFiles");
+                });
+
             modelBuilder.Entity("DocumentManagementSystem.Model.Role", b =>
                 {
                     b.Property<long>("Id")
@@ -266,12 +303,23 @@ namespace DocumentManagementSystem.Migrations
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityRoleClaim<long>");
 
-                    b.Property<long>("RoleId1")
+                    b.Property<long?>("RoleId1")
                         .HasColumnType("bigint");
 
                     b.HasIndex("RoleId1");
 
                     b.HasDiscriminator().HasValue("RoleClaim");
+                });
+
+            modelBuilder.Entity("DocumentManagementSystem.Model.MyFile", b =>
+                {
+                    b.HasOne("DocumentManagementSystem.Model.User", "user")
+                        .WithMany("MyFiles")
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("user");
                 });
 
             modelBuilder.Entity("DocumentManagementSystem.Model.UserRole", b =>
@@ -333,9 +381,7 @@ namespace DocumentManagementSystem.Migrations
                 {
                     b.HasOne("DocumentManagementSystem.Model.Role", "Role")
                         .WithMany("RoleClaims")
-                        .HasForeignKey("RoleId1")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("RoleId1");
 
                     b.Navigation("Role");
                 });
@@ -349,6 +395,8 @@ namespace DocumentManagementSystem.Migrations
 
             modelBuilder.Entity("DocumentManagementSystem.Model.User", b =>
                 {
+                    b.Navigation("MyFiles");
+
                     b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618

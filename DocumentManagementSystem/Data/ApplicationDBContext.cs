@@ -13,7 +13,7 @@ namespace DocumentManagementSystem.Data
         {
 
         }
-
+        public DbSet<MyFile> MyFiles { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -33,9 +33,19 @@ namespace DocumentManagementSystem.Data
                 .WithMany(u => u.UserRoles)
                 .HasForeignKey(u => u.UserId)
                 .IsRequired();
-
+                
             });
+            builder.Entity<MyFile>(entity =>
+                {
+                    entity.HasKey(a => a.Id);
+                    entity.Property(a => a.Name)
+                    .IsRequired();
 
+                    entity.HasOne(a => a.user)
+                    .WithMany(f => f.MyFiles)
+                    .HasForeignKey(a => a.userId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                });
 
         }
     }

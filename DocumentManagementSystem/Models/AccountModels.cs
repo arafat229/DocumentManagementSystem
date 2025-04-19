@@ -18,7 +18,7 @@ public class User : IdentityUser<long>
     public IList<string> Roles { get; set; } = [];
 
     public virtual ICollection<UserRole> UserRoles { get; set; } = [];
-
+    public virtual ICollection<MyFile> MyFiles { get; set; } = [];
 }
 [Index(nameof(Name), IsUnique = true)]
 public class Role : IdentityRole<long>
@@ -26,14 +26,17 @@ public class Role : IdentityRole<long>
     public DateTime createdAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdateAt { get; set; } = DateTime.UtcNow;
     public virtual ICollection<UserRole> UserRoles { get; set; } = [];
-
+    public virtual ICollection<RoleClaim> RoleClaims { get; set; } = [];
+    [NotMapped]
+   public  List<string> Claims { get; set; } = [];
 
 }
 
 public class RoleClaim : IdentityRoleClaim<long>
 {
-    public virtual Role Role { get; set; } = null!;
+    public virtual Role? Role { get; set; } = null!;
 }
+
 
 
 public class UserRole : IdentityUserRole<long>

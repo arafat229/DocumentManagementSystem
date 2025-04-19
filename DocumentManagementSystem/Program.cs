@@ -38,40 +38,6 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    builder.Services.AddSwaggerGen(options =>
-    {
-        options.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-        {
-            In = ParameterLocation.Header,
-            Description = "Please Enter a valid Token",
-            Name = "Authorization",
-            Type = SecuritySchemeType.Http,
-            BearerFormat = "JWT",
-            Scheme = "Bearer"
-
-        });
-        options.AddSecurityRequirement(new OpenApiSecurityRequirement
-     {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
-                }
-
-            },
-            new string[]{}
-
-        }
-
-
-    });
-
-    });
 
     // User Management configuration for Token Generation
     builder.Services.Configure<IdentityOptions>(options =>
@@ -136,25 +102,31 @@ try
 
           
         });
-    //require Authentification globaly
-    builder.Services.AddMvc(options =>
+ /*   //require Authentification globaly
+   builder.Services.AddMvc(options =>
     {
         var policy = new AuthorizationPolicyBuilder()
             .RequireAuthenticatedUser()
             .Build();
         options.Filters.Add(new AuthorizeFilter(policy));
+   *//* });*/
+
+    //Policy based Authorization
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy("RequiredAdminRole", policy => policy.RequireRole("Admin"));
     });
-    
     //AutoMapper Configuration 
     builder.Services.AddAutoMapper(m => m.AddProfile<AutoMapperProfiles>());
 
     //configer idhasher
-   builder.Services.AddSingleton<IHashids>(x => new Hashids(builder.Configuration
-       .GetSection("AppSettins:Token").Value, 32));
+    //  builder.Services.AddSingleton<IHashids>(x => new Hashids(builder.Configuration
+    //    .GetSection("AppSettins:Token").Value, 32));
 
+    builder.Services.AddTransient<SeedData>();
     builder.Services.AddAuthorization();
     builder.Services.AddControllers();
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
     //Config Swagger
     builder.Services.AddSwaggerGen(c =>
     {
