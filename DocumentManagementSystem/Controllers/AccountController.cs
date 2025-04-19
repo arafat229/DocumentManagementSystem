@@ -61,7 +61,7 @@ public class AccountController : ControllerBase
 
             var userToCreate = mappper.Map<User>(registerDto);
 
-            var user = await dbContext.Users.FirstOrDefaultAsync(x => x.PhoneNumber == registerDto.PhoneNumber);
+            var user = await dbContext.Users.Include(c=>c.MyFiles).FirstOrDefaultAsync(x => x.PhoneNumber == registerDto.PhoneNumber);
 
             if (user != null)
                 return BadRequest(CallResult.Error("Account with this username or email already exists"));
@@ -76,7 +76,7 @@ public class AccountController : ControllerBase
                     Message = "Failed to create a user Account                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ount"
                 });
 
-            user = await dbContext.Users.Include(P=>P.MyFiles).FirstOrDefaultAsync(x => x.PhoneNumber == registerDto.PhoneNumber);
+            user = await dbContext.Users.FirstOrDefaultAsync(x => x.PhoneNumber == registerDto.PhoneNumber);
             if (user is null)
                 return BadRequest(CallResult.Error("Failed to find the account"));
 

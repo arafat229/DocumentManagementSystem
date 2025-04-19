@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using DocumentManagementSystem.DTOs.DocumentsDtos;
+using System.ComponentModel.DataAnnotations;
 
 namespace DocumentManagementSystem.DTOs.AccountsDtos
 {

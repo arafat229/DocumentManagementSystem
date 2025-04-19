@@ -13,7 +13,7 @@ public class MyFile
         public string Description { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
         public User user { get; set; } = null!;
-        public long userId { get; set; }
+        public long? userId { get; set; }
 
              
     }

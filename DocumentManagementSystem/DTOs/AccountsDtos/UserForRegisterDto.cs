@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using DocumentManagementSystem.DTOs.DocumentsDtos;
+using DocumentManagementSystem.Model;
+using System.ComponentModel.DataAnnotations;
 
 namespace DocumentManagementSystem.DTOs.Account
 {
@@ -13,11 +15,15 @@ namespace DocumentManagementSystem.DTOs.Account
         [Required]
         public string Username { get; set; } = null!;
         public string Role { get; set; } = null!;
+
         [Required]
         [EmailAddress]
         public string Email { get; set; } = null!;
         [Required]
         public string Password { get; set; } = null!;
+
+        public List<FileForReturnDto> MyFile { get; set; } = null!;
+
 
 
     }

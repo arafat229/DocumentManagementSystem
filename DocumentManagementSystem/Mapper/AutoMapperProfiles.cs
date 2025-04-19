@@ -10,11 +10,11 @@ namespace DocumentManagementSystem.Mapper
     {
         public AutoMapperProfiles()
         {
-            CreateMap<UserForRegisterDto, User>().ReverseMap();
+            CreateMap<User,UserForRegisterDto>().ReverseMap();
             CreateMap<User, UserDetailsDto>().ReverseMap();
             CreateMap<User, UserForListDto>().ReverseMap();
             CreateMap<User, UserForUpdateDto>();
-            CreateMap<FileForCreationDto, MyFile>().ReverseMap();
+            CreateMap<MyFile,FileForCreationDto >().ReverseMap();
             CreateMap<MyFile, FileForReturnDto>().ReverseMap();
             CreateMap<MyFile, FileForUpdateDto>().ReverseMap();
 
