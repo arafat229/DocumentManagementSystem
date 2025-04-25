@@ -30,14 +30,13 @@ namespace DocumentManagementSystem.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("Categories")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("File")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -45,11 +44,7 @@ namespace DocumentManagementSystem.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("file")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("userId")
+                    b.Property<long?>("userId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -163,7 +158,7 @@ namespace DocumentManagementSystem.Migrations
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserName")
@@ -316,8 +311,7 @@ namespace DocumentManagementSystem.Migrations
                     b.HasOne("DocumentManagementSystem.Model.User", "user")
                         .WithMany("MyFiles")
                         .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("user");
                 });

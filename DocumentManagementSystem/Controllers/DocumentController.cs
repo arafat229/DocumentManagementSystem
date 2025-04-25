@@ -6,6 +6,7 @@ using DocumentManagementSystem.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Security.Claims;
 
 namespace DocumentManagementSystem.Mapper;
@@ -20,84 +21,165 @@ public class DocumentController : ControllerBase
 
     private readonly ApplicationDBContext dbContext;
     private readonly IMapper mapper;
-    private readonly IFormFile file;
+    
+   
 
-    public DocumentController(ApplicationDBContext dbContext, IMapper mapper, IFormFile file)
+    public DocumentController(ApplicationDBContext dbContext, IMapper mapper )
     {
         this.dbContext = dbContext;
         this.mapper = mapper;
-        this.file = file;
+       
     }
 
-    [HttpGet("GetFile/{id}")]
-    public async Task<IActionResult>GetFile(int id)
+    [HttpGet("Search")]
+    public async Task<IActionResult>SearchFile([FromQuery]FileForSerachDto fileForSerach)
     {
+        try
+        {
+            
+            IQueryable<MyFile> file = dbContext.MyFiles;
+            if (!string.IsNullOrEmpty(fileForSerach.Name))
+            {
+                 file = file.Where(x => x.Name.Contains(fileForSerach.Name));
 
-        var fileFromDB = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Id == id);
+            }
+            if (!string.IsNullOrEmpty(fileForSerach.Description))
+            {
+                 file = file.Where(x => x.Description.Contains(fileForSerach.Description));
+            }
+            if (fileForSerach.Id > 0)
+            {
+                 file = file.Where(x => x.Id == fileForSerach.Id);
+            }
+            if (fileForSerach.CreatedAt!= null)
+            {
+                 file = file.Where(x => x.CreatedAt.Equals(fileForSerach.CreatedAt));
 
-        var file = mapper.Map<FileForReturnDto>(fileFromDB);
+            }
 
-        return Ok(CallResult.Ok(data: file));
+            return Ok(CallResult.Ok(data: file));
+
+          
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.StackTrace);
+           return  BadRequest(CallResult.Error("Cannot find the file you are searching for "));
+            
+        }
+      
+        
 
     }
 
-    [HttpPost("File/create/{userId}")]
-    public async Task<IActionResult> CreateFileForUser(int id, [FromForm]FileForCreationDto fileForCreationDto )
+    [HttpPost("create")]
+    public async Task<IActionResult> CreateFile([FromForm]FileForCreationDto fileForCreationDto)
     {
-        var fileFromDB = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Id == id);
+        fileForCreationDto.Name = fileForCreationDto.Name.Trim();
+        fileForCreationDto.Description = fileForCreationDto.Description.Trim();
+     
+        long size = fileForCreationDto.File.Length;
+        if (size <= 0)
+            return BadRequest(CallResult.Error("empty File"));
 
-        if (fileFromDB is null)
-            BadRequest(CallResult.Error("Can't find the file you are trying to access"));
+        List<string> validExtension = new List<string> { ".pdf",".docx" };
 
+        var extension = Path.GetExtension(fileForCreationDto.File.FileName);
 
-        var uploadedfile = new UploadHandler().Upload(file);
+        if (!validExtension.Contains(extension))
+            return BadRequest(CallResult.Error($"wrong File,system only support {string.Join(",",validExtension)}"));
 
-        fileForCreationDto.CreatedAt = DateTime.UtcNow;
+        var fileName = Guid.NewGuid().ToString() + extension;
+        var path = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
+       using  FileStream stream = new FileStream (Path.Combine(path, fileName),FileMode.Create);
 
-        fileForCreationDto.file = uploadedfile.ToString();
-         
+        fileForCreationDto.File.CopyTo(stream);
+
 
         var document = mapper.Map<MyFile>(fileForCreationDto);
 
-       
+        document.CreatedAt = DateTime.Now;
+     
+
         await dbContext.MyFiles.AddAsync(document);
+      await dbContext.SaveChangesAsync();
 
-        
-
-        if (await dbContext.SaveChangesAsync() <= 0)
-            return BadRequest(CallResult.Error("unable to update the file"));
-
-
-        var fileToReturn = mapper.Map<FileForReturnDto>(document);
-        return CreatedAtRoute("GetFile", new {id = document.Id},fileToReturn);
+        return Ok(CallResult.Ok(data: fileName, message: "File created sucessfully"));
     }
 
   
     [HttpPut("UpdateFile/{id}")]
     public async Task<IActionResult>UpdateFile(int id,[FromForm]FileForUpdateDto fileForUpdateDto )
     {
-        fileForUpdateDto.Description = fileForUpdateDto.Description.ToLower().Trim();
-        fileForUpdateDto.Name = fileForUpdateDto.Name.ToLower().Trim();
-        fileForUpdateDto.Categories = fileForUpdateDto.Categories.ToLower().Trim();
-        fileForUpdateDto.file = fileForUpdateDto.file.Trim();
-       
 
-         var fileFromDB = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Id == id);
 
-        if (fileFromDB is null)
-            BadRequest(CallResult.Error("Can't find the file you are trying to access"));
-
-        fileForUpdateDto.CreatedAt = DateTime.UtcNow;
-        mapper.Map(fileForUpdateDto, fileFromDB);
-
-         dbContext.Update(fileFromDB);
+        try
+        {
+            fileForUpdateDto.Description = fileForUpdateDto.Description.Trim();
+            fileForUpdateDto.Name = fileForUpdateDto.Name.Trim();
 
 
 
-        if (await dbContext.SaveChangesAsync() <= 0)
-            return BadRequest(CallResult.Error("unable to update user"));
+            var fileFromDB = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Id == id);
 
-        return Ok(CallResult.Ok());
+            if (fileFromDB != null)
+            {
+                // fileFromDB.Name = fileForUpdateDto.Name;
+                //fileFromDB.Description = fileForUpdateDto.Description;
+
+                var size = fileForUpdateDto.file.Length;
+
+                if (size <= 0)
+                    return BadRequest(CallResult.Error("File is empty"));
+
+                List<string> validExtension = new List<string> { ".pdf", ".docx" };
+
+                var extension = Path.GetExtension(fileForUpdateDto.file.FileName);
+
+                if (!validExtension.Contains(extension))
+                {
+                    BadRequest(CallResult.Error($"wrong file, system only support,{string.Join(",", validExtension)}"));
+                }
+
+                var fileName = Guid.NewGuid().ToString() + extension;
+
+                var path = Path.Combine(Directory.GetCurrentDirectory(), "FileUpdates");
+
+                using FileStream stream = new FileStream(Path.Combine(fileName, path), FileMode.Create);
+                fileForUpdateDto.file.CopyTo(stream);
+
+                var updatedFiles = mapper.Map<MyFile>(fileForUpdateDto);
+
+
+
+                fileFromDB.File = updatedFiles.File;
+                fileFromDB.Description = updatedFiles.Description;
+                fileFromDB.Name = updatedFiles.Name;
+                updatedFiles.CreatedAt = DateTime.Now;
+
+
+            }
+
+            else
+            {
+                BadRequest(CallResult.Error("Can't find the File you are trying to access"));
+
+            }
+
+
+            await dbContext.SaveChangesAsync();
+
+            return Ok(CallResult.Ok("file updated succesfully"));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.StackTrace);
+            return BadRequest(CallResult.Error("Something went wrong"));
+
+        }
+
+
 
     }
 
@@ -108,10 +190,11 @@ public class DocumentController : ControllerBase
         var fileFromDB = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Id == id);
 
         if (fileFromDB is null)
-            BadRequest(CallResult.Error("Can't find the file you are trying to access"));
+            BadRequest(CallResult.Error("Can't find the File you are trying to access"));
 
-        var result = dbContext.MyFiles.Remove(fileFromDB);
-        return Ok(CallResult.Ok());
+         dbContext.MyFiles.Remove(fileFromDB);
+
+        return Ok(CallResult.Ok("FileDeleted successfully"));
        
 
     }

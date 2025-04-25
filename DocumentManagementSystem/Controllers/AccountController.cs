@@ -36,7 +36,6 @@ public class AccountController : ControllerBase
     {
         this.config = config;
         this.mappper = mappper;
-      //  this.hashids = hashids;
         this.userManager = userManager;
         this.roleManager = roleManager;
         this.signInManager = signInManager;
@@ -47,28 +46,32 @@ public class AccountController : ControllerBase
 
     [HttpPost("user/create")]
     [AllowAnonymous]
-    public async Task<IActionResult> Register(UserForRegisterDto registerDto)
+    public async Task<IActionResult> Register(UserForRegisterDto registerForDto)
     {
 
         try
         {
-            registerDto.Role = registerDto.Role.ToLower();
-            registerDto.FirstName = registerDto.FirstName.Trim().ToLower();
-            registerDto.LastName = registerDto.LastName.Trim().ToLower();
+            registerForDto.Role = registerForDto.Role.ToLower();
+            registerForDto.FullName = registerForDto.FullName.Trim().ToLower();
+            registerForDto.Username = registerForDto.Username.Trim().ToLower();
+            registerForDto.Email = registerForDto.Email.Trim();
+            registerForDto.Password = registerForDto.Password.Trim();
 
-            if (!await roleManager.RoleExistsAsync(registerDto.Role))
+            if (!await roleManager.RoleExistsAsync(registerForDto.Role))
                 return BadRequest(CallResult.Error("The role you are trying to access doesn't exist"));
 
-            var userToCreate = mappper.Map<User>(registerDto);
+            var userToCreate = mappper.Map<User>(registerForDto);
 
-            var user = await dbContext.Users.Include(c=>c.MyFiles).FirstOrDefaultAsync(x => x.PhoneNumber == registerDto.PhoneNumber);
+            var user = await dbContext.Users.FirstOrDefaultAsync(x => x.PhoneNumber == registerForDto.PhoneNumber);
 
             if (user != null)
                 return BadRequest(CallResult.Error("Account with this username or email already exists"));
 
             userToCreate.CreatedAt = DateTime.UtcNow;
+            userToCreate.IsDeleted = false;
 
-            var result = await userManager.CreateAsync(userToCreate, registerDto.Password);
+
+            var result = await userManager.CreateAsync(userToCreate, registerForDto.Password);
             if (!result.Succeeded)
                 return BadRequest(new CallResult()
                 {
@@ -76,21 +79,22 @@ public class AccountController : ControllerBase
                     Message = "Failed to create a user Account                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ount"
                 });
 
-            user = await dbContext.Users.FirstOrDefaultAsync(x => x.PhoneNumber == registerDto.PhoneNumber);
+            user = await dbContext.Users.FirstOrDefaultAsync(x => x.PhoneNumber == registerForDto.PhoneNumber);
             if (user is null)
-                return BadRequest(CallResult.Error("Failed to find the account"));
+                return BadRequest(CallResult.Error("Failed to save the account "));
 
-            var roleResult = await userManager.AddToRoleAsync(user, registerDto.Role.ToLower());
+            var roleResult = await userManager.AddToRoleAsync(user, registerForDto.Role);
 
             if (!roleResult.Succeeded)
-                //return BadRequest(CallResult.Error(string.Join(", ", roleResult.Errors.Select(x => x.Description))));
-                return BadRequest(new CallResult
-                {
-                    IsSuccess = false,
-                    Message = "something went wrong",
-                    Data = roleResult.Errors
-                });
-
+                return BadRequest(CallResult.Error(string.Join(", ", roleResult.Errors.Select(x => x.Description))));
+            /* return BadRequest(new CallResult
+             {
+                 IsSuccess = false,
+                 Message = "something went wrong",
+                 Data = roleResult.Errors
+             });
+*/
+            await dbContext.SaveChangesAsync();
             return Ok(CallResult.Ok("Account created succesfully"));
         }
         catch (Exception ex)
@@ -128,7 +132,7 @@ public class AccountController : ControllerBase
 
             var claims = new List<Claim>()
             {
-                new Claim(ClaimTypes.NameIdentifier,userFromDB.Id.ToString()),
+                new Claim(Constants.UserId,userFromDB.Id.ToString()),
                 new Claim(Constants.UserName,userFromDB.UserName??""),
                 new Claim(Constants.Email,userFromDB.Email??""),
                 new Claim(Constants.PhoneNumber,userFromDB.PhoneNumber??"")
@@ -170,6 +174,53 @@ public class AccountController : ControllerBase
 
 
     }
+
+    [HttpPost("roles/create")]
+
+    // [Authorize(Policy = "Admim")]
+    public async Task<IActionResult> CreateRole(RoleDto roleForCreate)
+    {
+        try
+        {
+            var role = await roleManager.FindByNameAsync(roleForCreate.Name);
+            if (role != null)
+                return NotFound(CallResult.Error("Role already exist"));
+
+            role = new Role() { Name = roleForCreate.Name };
+            var res = await roleManager.CreateAsync(role);
+
+            if (!res.Succeeded)
+                return BadRequest(CallResult.Error(string.Join(",", res.Errors.Select(s => s.Description))));
+
+            var existingClaims = await roleManager.GetClaimsAsync(role);
+
+            foreach (var claim in roleForCreate.Claims.Distinct().ToList())
+            {
+                if (!existingClaims.Any(x => x.Value == claim))
+                    roleManager.AddClaimAsync(role, new Claim(Constants.Privilege, claim)).Wait();
+
+            }
+            role.UpdateAt = DateTime.Now;
+            dbContext.Update(role);
+            if (await dbContext.SaveChangesAsync() <= 0)
+                return BadRequest(CallResult.Error());
+
+            return Ok(CallResult.Ok());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.StackTrace);
+            return BadRequest(CallResult.Error(ex.Message));
+
+        }
+
+
+
+    }
+
+
+/*
+
     [HttpPost("users/list")]
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> GetUsers(PaginationDto? dto)
@@ -179,7 +230,7 @@ public class AccountController : ControllerBase
             dto ??= new PaginationDto();
 
 
-            var pagedUsers = await PagedList<User>.CreateAsync(dbContext.Users.AsNoTracking(), dto.PageNumber, dto.PageSize);
+            var pagedUsers = await PagedList<User>.CreateAsync(dbContext.Users.Include(x=>x.MyFiles).AsNoTracking(), dto.PageNumber, dto.PageSize);
 
             var userToReturn = mappper.Map<IEnumerable<UserForListDto>>(pagedUsers);
             foreach (var u in userToReturn)
@@ -239,7 +290,6 @@ public class AccountController : ControllerBase
         userForUpdateDto.FullName = userForUpdateDto.FullName.Trim().ToLower();
         userForUpdateDto.Role = userForUpdateDto.Role.Trim().ToLower();
         userForUpdateDto.UserName = userForUpdateDto.UserName.Trim().ToLower();
-        userForUpdateDto.LastName = userForUpdateDto.LastName.Trim().ToLower();
         userForUpdateDto.Email = userForUpdateDto.Email.Trim().ToLower();
         userForUpdateDto.PhoneNumber = userForUpdateDto.PhoneNumber.Trim().ToLower();
 
@@ -425,48 +475,6 @@ public class AccountController : ControllerBase
 
 
     }
-    [HttpPost("roles/create")]
-
-   // [Authorize(Policy = "Admim")]
-    public async Task<IActionResult>CreateRole(RoleDto roleForCreate)
-    {
-        try
-        {
-            var role = await roleManager.FindByNameAsync(roleForCreate.Name);
-            if (role != null)
-                return NotFound(CallResult.Error("Role already exist"));
-
-            role = new Role() { Name = roleForCreate.Name };
-            var res = await roleManager.CreateAsync(role);
-
-            if (!res.Succeeded)
-                return BadRequest(CallResult.Error(string.Join(",", res.Errors.Select(s => s.Description))));
-
-            var existingClaims = await roleManager.GetClaimsAsync(role);
-
-            foreach (var claim in roleForCreate.Claims.Distinct().ToList())
-            {
-                if (!existingClaims.Any(x => x.Value == claim))
-                    roleManager.AddClaimAsync(role, new Claim(Constants.Privilege, claim)).Wait();
-
-            }
-            role.UpdateAt = DateTime.Now;
-            dbContext.Update(role);
-            if (await dbContext.SaveChangesAsync() <= 0)
-                return BadRequest(CallResult.Error());
-
-            return Ok(CallResult.Ok());
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.StackTrace);
-            return BadRequest(CallResult.Error(ex.Message));
-
-        }
-
-
-
-    }
     [HttpGet("roles")]
 
     [Authorize(Policy = "Admim")]
@@ -645,4 +653,4 @@ public class AccountController : ControllerBase
 
 
     }
-}
+*/}

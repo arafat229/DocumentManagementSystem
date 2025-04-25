@@ -13,12 +13,11 @@ public class User : IdentityUser<long>
     public bool IsDeleted { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     [NotMapped]
     public IList<string> Roles { get; set; } = [];
-
     public virtual ICollection<UserRole> UserRoles { get; set; } = [];
-    public virtual ICollection<MyFile> MyFiles { get; set; } = [];
+    public virtual ICollection<MyFile>? MyFiles { get; set; } 
 }
 [Index(nameof(Name), IsUnique = true)]
 public class Role : IdentityRole<long>

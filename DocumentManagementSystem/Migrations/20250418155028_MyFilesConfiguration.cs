@@ -38,7 +38,7 @@ namespace DocumentManagementSystem.Migrations
                 .OldAnnotation("SqlServer:Identity", "1, 1");
 
             migrationBuilder.AddColumn<string>(
-                name: "file",
+                name: "File",
                 table: "MyFiles",
                 type: "nvarchar(max)",
                 nullable: false,
@@ -70,7 +70,7 @@ namespace DocumentManagementSystem.Migrations
                 table: "MyFiles");
 
             migrationBuilder.DropColumn(
-                name: "file",
+                name: "File",
                 table: "MyFiles");
 
             migrationBuilder.RenameTable(

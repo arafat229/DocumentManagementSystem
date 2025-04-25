@@ -8,12 +8,12 @@ namespace DocumentManagementSystem.DTOs.AccountsDtos
         [Phone]
         public string PhoneNumber { get; set; } = null!;
         public string  Role { get; set; } = null!;
-        public string  FirstName { get; set; } = null!;
-        public string  LastName { get; set; } = null!;
+        public string FullName { get; set; } = null!;
         public string  UserName { get; set; } = null!;
         public string  Password { get; set; } = null!;
         [EmailAddress]
         public string email { get; set; } = null!;
-        
+        public List<FileForReturnDto>? MyFile { get; set; }
+
     }
 }

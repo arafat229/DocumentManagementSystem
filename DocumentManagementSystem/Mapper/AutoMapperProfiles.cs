@@ -14,8 +14,8 @@ namespace DocumentManagementSystem.Mapper
             CreateMap<User, UserDetailsDto>().ReverseMap();
             CreateMap<User, UserForListDto>().ReverseMap();
             CreateMap<User, UserForUpdateDto>();
-            CreateMap<MyFile,FileForCreationDto >().ReverseMap();
-            CreateMap<MyFile, FileForReturnDto>().ReverseMap();
+            CreateMap<FileForCreationDto,MyFile>();
+            CreateMap<MyFile, FileForSerachDto>().ReverseMap();
             CreateMap<MyFile, FileForUpdateDto>().ReverseMap();
 
         }

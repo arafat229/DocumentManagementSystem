@@ -48,7 +48,7 @@ namespace DocumentManagementSystem.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("file")
+                    b.Property<string>("File")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
