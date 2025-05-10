@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DocumentManagementSystem.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20250425030613_propertyUpdates")]
-    partial class propertyUpdates
+    [Migration("20250502191752_lastSetup")]
+    partial class lastSetup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -47,7 +47,7 @@ namespace DocumentManagementSystem.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long?>("userId")
+                    b.Property<long>("userId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -314,7 +314,8 @@ namespace DocumentManagementSystem.Migrations
                     b.HasOne("DocumentManagementSystem.Model.User", "user")
                         .WithMany("MyFiles")
                         .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("user");
                 });

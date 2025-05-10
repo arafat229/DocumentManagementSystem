@@ -92,8 +92,8 @@ try
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Utils.StringToByteArray($"{secret}-{secret}")),
                 ValidateLifetime = true,
-                ValidateIssuer = true,
-                ValidateAudience = true,
+                ValidateIssuer = false,
+                ValidateAudience = false,
                 ValidIssuer = builder.Configuration["AppSettings:Issuer"],
                 ValidAudience = builder.Configuration["AppSettings:Audience"],
                 ClockSkew = TimeSpan.Zero
@@ -102,14 +102,7 @@ try
 
           
         });
- /*   //require Authentification globaly
-   builder.Services.AddMvc(options =>
-    {
-        var policy = new AuthorizationPolicyBuilder()
-            .RequireAuthenticatedUser()
-            .Build();
-        options.Filters.Add(new AuthorizeFilter(policy));
-   *//* });*/
+
 
     //Policy based Authorization
     builder.Services.AddAuthorization(options =>
@@ -158,6 +151,8 @@ try
 
     var app = builder.Build();
 
+   
+
     // Set up the middleware
 
     app.UseSerilogRequestLogging(option =>
@@ -171,7 +166,9 @@ try
         option.IncludeQueryInRequestPath = true;
 
     });
+    //seed The database once app started
 
+     SeedData.Initialize(app.Services);
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())

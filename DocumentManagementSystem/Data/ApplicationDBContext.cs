@@ -14,6 +14,7 @@ namespace DocumentManagementSystem.Data
 
         }
         public DbSet<MyFile> MyFiles { get; set; }
+       
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -46,6 +47,7 @@ namespace DocumentManagementSystem.Data
                     .HasForeignKey(a => a.userId)
                     .OnDelete(DeleteBehavior.Cascade);
                 });
+          
 
         }
     }

@@ -17,7 +17,7 @@ public class User : IdentityUser<long>
     [NotMapped]
     public IList<string> Roles { get; set; } = [];
     public virtual ICollection<UserRole> UserRoles { get; set; } = [];
-    public virtual ICollection<MyFile>? MyFiles { get; set; } 
+    public List<MyFile>? MyFiles { get; set; }
 }
 [Index(nameof(Name), IsUnique = true)]
 public class Role : IdentityRole<long>

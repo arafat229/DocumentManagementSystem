@@ -44,7 +44,10 @@ namespace DocumentManagementSystem.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long?>("userId")
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("userId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -311,7 +314,8 @@ namespace DocumentManagementSystem.Migrations
                     b.HasOne("DocumentManagementSystem.Model.User", "user")
                         .WithMany("MyFiles")
                         .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("user");
                 });

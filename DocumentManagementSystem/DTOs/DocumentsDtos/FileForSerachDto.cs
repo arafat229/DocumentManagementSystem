@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.Identity.Client;
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
 
 namespace DocumentManagementSystem.DTOs.DocumentsDtos
@@ -12,6 +13,9 @@ namespace DocumentManagementSystem.DTOs.DocumentsDtos
 
         [DisplayFormat(DataFormatString ="{0:MM/dd/yyyy}",ApplyFormatInEditMode =true)]
          public DateTime? CreatedAt { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}", ApplyFormatInEditMode = true)]
+        public DateTime? UpdatedAt { get; set; }
        
     }
 }

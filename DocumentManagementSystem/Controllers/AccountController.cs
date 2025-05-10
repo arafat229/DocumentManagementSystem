@@ -200,8 +200,10 @@ public class AccountController : ControllerBase
                     roleManager.AddClaimAsync(role, new Claim(Constants.Privilege, claim)).Wait();
 
             }
-            role.UpdateAt = DateTime.Now;
-            dbContext.Update(role);
+            role.createdAt = DateTime.Now;
+
+            await dbContext.Roles.AddAsync(role);
+
             if (await dbContext.SaveChangesAsync() <= 0)
                 return BadRequest(CallResult.Error());
 
