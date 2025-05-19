@@ -11,7 +11,7 @@
         public string Role { get; set; } = null!;
         public List<string> Permission { get; set; } = null!;
         public DateTime IsCreatedAt { get; set; } = DateTime.Now;
-     //   public DateTime IsUpdatedAt { get; set; }
+     //  
 
     }
 }
