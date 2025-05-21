@@ -80,10 +80,10 @@ public class AccountController : ControllerBase
                     Message = "Failed to create a user Account                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ount"
                 });
 
-            user = await dbContext.Users.FirstOrDefaultAsync(x => x.PhoneNumber == registerForDto.PhoneNumber);
+           /* user = await dbContext.Users.FirstOrDefaultAsync(x => x.PhoneNumber == registerForDto.PhoneNumber);
             if (user is null)
                 return BadRequest(CallResult.Error("Failed to save the account "));
-
+*/
             var roleResult = await userManager.AddToRoleAsync(user, registerForDto.Role);
 
             if (!roleResult.Succeeded)
@@ -233,7 +233,6 @@ public class AccountController : ControllerBase
                 FullName = p.FullName,
                 Email = p.Email,
                 PhoneNumber = p.PhoneNumber,
-                MyFile = p.MyFiles
                
             });
 
@@ -244,16 +243,12 @@ public class AccountController : ControllerBase
                     UserName = u.UserName,
                     FullName = u.FullName,
                     Email = u.Email,
-                    MyFiles = u.MyFile,
-                    PhoneNumber = u.PhoneNumber 
-                       
+                    PhoneNumber = u.PhoneNumber,
+                   
                 };
                 var role = await userManager.GetRolesAsync(user);
                 if (role.Count > 1)
                     u.Role = role[0];
-
-               
-              
                 
 
             }

@@ -13,7 +13,6 @@ namespace DocumentManagementSystem.DTOs.AccountsDtos
         public string FullName { get; set; } = null!;
         public string UserName { get; set; } = null!;
         public string Email { get; set; } = null!;
-        public List<FileForReturnDto>? MyFile { get; set; }
 
 
 
