@@ -19,7 +19,7 @@ public class User : IdentityUser<long>
     public virtual ICollection<UserRole> UserRoles { get; set; } = [];
     public List<MyFile>? MyFiles { get; set; }
 }
-[Index(nameof(Name), IsUnique = true)]
+[Index(nameof(Name), IsUnique = true)] 
 public class Role : IdentityRole<long>
 {
     public DateTime createdAt { get; set; } = DateTime.UtcNow;

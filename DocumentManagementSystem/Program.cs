@@ -117,8 +117,9 @@ try
     //    .GetSection("AppSettins:Token").Value, 32));
 
     builder.Services.AddTransient<SeedData>();
+/*
     builder.Services.AddAuthorization();
-    builder.Services.AddControllers();
+    builder.Services.AddControllers();*/
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
     //Config Swagger
     builder.Services.AddSwaggerGen(c =>

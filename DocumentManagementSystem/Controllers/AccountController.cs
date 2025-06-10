@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net.WebSockets;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Security.Cryptography.Xml;
@@ -84,7 +85,7 @@ public class AccountController : ControllerBase
             if (user is null)
                 return BadRequest(CallResult.Error("Failed to save the account "));
 */
-            var roleResult = await userManager.AddToRoleAsync(user, registerForDto.Role);
+            var roleResult = await userManager.AddToRoleAsync(userToCreate, registerForDto.Role);
 
             if (!roleResult.Succeeded)
                 return BadRequest(CallResult.Error(string.Join(", ", roleResult.Errors.Select(x => x.Description))));
@@ -227,35 +228,31 @@ public class AccountController : ControllerBase
             var pageUser = await PagedList<User>.CreateAsync(dbContext.Users.Include(x => x.MyFiles)
                 .AsNoTracking(), dto.PageNumber, dto.PageSize);
 
-            var userToReturn = pageUser.Select(p => new UserForListDto()
-            {
-                UserName = p.UserName,
-                FullName = p.FullName,
-                Email = p.Email,
-                PhoneNumber = p.PhoneNumber,
-               
-            });
+            List<UserForListDto> result = new List<UserForListDto>();
+           
 
-            foreach (var u in userToReturn)
+            foreach (var user in pageUser)
             {
-                var user = new User
+                var userToReturn = new UserForListDto
                 {
-                    UserName = u.UserName,
-                    FullName = u.FullName,
-                    Email = u.Email,
-                    PhoneNumber = u.PhoneNumber,
-                   
+                    PhoneNumber = user.PhoneNumber,
+                    FullName  = user.FullName,
+                    UserName = user.UserName,
+                    Email = user.Email      
                 };
+
                 var role = await userManager.GetRolesAsync(user);
-                if (role.Count > 1)
-                    u.Role = role[0];
-                
+                if (role.Count >= 1)
+                    userToReturn.Role = role[0];
 
+
+                result.Add(userToReturn);
             }
+            
+         
 
 
-
-            return Ok(CallResult.Ok(data: userToReturn.ToList()));
+            return Ok(CallResult.Ok(data: result));
         }
         catch (Exception ex)
         {
@@ -328,12 +325,12 @@ public class AccountController : ControllerBase
                 var pagedUsers = await PagedList<User>.CreateAsync(dbContext.Users.Include(x=>x.MyFiles).AsNoTracking(), dto.PageNumber, dto.PageSize);
 
                 var userToReturn = mappper.Map<IEnumerable<UserForListDto>>(pagedUsers);
-                foreach (var u in userToReturn)
+                foreach (var userToReturn in userToReturn)
                 {
                     var user = mappper.Map<User>(userToReturn);
                     var role = await userManager.GetRolesAsync(user);
                     if (role.Count > 1)
-                        u.Role = role[0];
+                        userToReturn.Role = role[0];
                 }
                 return Ok(CallResult.Ok(data: userToReturn));
             }

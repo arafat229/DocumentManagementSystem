@@ -1,0 +1,170 @@
+Number System and
+Codes
+
+Binary Numbers
+cscharles393@gmail.com
+
+
+
+Counting in bases
+
+The binary number system just like the usual base
+ten that we are used to is another way of
+counting.
+
+The binary number system have just two digits
+(0,1) which is called bit.
+
+The highest digit in any base is equal to the base
+minus one. For example counting from {0 - 9}in
+
+base ten, though there are ten digits, the highest
+digit is 9. This apply to all other bases.
+
+For base two (binary) there are two digits i.e.
+(0,1)
+
+
+
+Counting in binary
+
+¢ Counting in binary system is just as is done in
+base ten which we are very familiar with.
+
+e When we count from 0 — 9 in base ten, the next
+digit after 9 is 10 (one, zero) what we call ten.
+When we count from 11 to 19, the next digit
+becomes 20
+
+¢ Since binary has just two digits, when we count
+from 0-1, the next digit becomes 10 (one, zero)
+just as we did same in base ten when the highest
+digit is reached.
+
+
+
+Comparison between PFourbits
+
+Decimal Binary
+binary and base ten 0 0000
+e e e 1 0 0 0 1
+using various bits hah
+3 0011
+one bit |
+Decimal _ Binary Decimal Binary 4 010 0
+fe) 0 5 01041
+0 00 0
+6 Oo 110
+7 Oo 1141
+2 01 0
+Decimal Binary 4 10 0 9 100 1
+1 1 1
+0 0 0 5 10 1 0 ° °
+11 1 1 1
+1 0 1 6 11 0 °
+12 1 1
+2 1 0 7 111 oe
+3 1 4 : 13 110 1
+=7 14 1 1 1 40
+=3 15 1111
+
+
+
+Comparison Cont.
+
+¢ We can deduce further
+° \We can see that given n bits, the
+greatest decimal number
+
+from the to be obtained using the
+previous slide n bits would be
+
+that when we e 2"_1 therefore
+
+had
+
+bit | Greatest Decimal Number [MAME A Mc
+
+F decimal number to be
+3 obtained when we use
+
+1
+2
+3 7 e 5,6, 7, k+f, rt, bits
+4
+
+15
+
+
+
+Converting decimal number to binary
+
+¢ We can convert decimal number to binary and
+binary to decimal.
+
+¢ From decimal to binary,
+— we use either sum of weight method or
+
+— divide the whole number side by 2, keeping the
+remainders till we get a zero. The answer is written
+in ascending order
+
+¢ For decimals, we multiply the fractional bits by 2
+keeping the overflow. The answer is then written
+in descending order
+
+
+
+Sum of Weight
+
+¢ Here we break the decimal number into the
+weight of binary equivalent and add them
+together replacing missing weights with zero
+
+¢ Example 2?
+
+* Convert 11, 14, 25, 42 into bay 2°
+
+© 11=84+24+1=23+21+2°9=1 CC 2°
+
+© 14=84+44+2=23 +2742! nn
+
+© 25=16+48 + 1= 27+27+2° =1100
+
+© 42 = 32 +8 +2 = 2°+27+2'=101010
+
+What are the missing weights in 42 representation
+
+
+
+Examples — Division Methods
+
+¢ Convert the following to binary
+
+a. 15, 32,14, 18
+
+Poe ee
+7 1 0 2 9 0
+
+a |g |a A la |i — ff 2 4 1
+
+A la fal A lal | ee > 2 0
+0 1 0 1 : : : > Ia te
+
+0 1 |
+15 = 1111, 14 = 1110, 32= 100000,
+
+18 = 10010,
+
+
+
+Fractional Parts — Weighted Method
+
+Ce
+0.25 0.125 0.0625
+° 0.625 = 0.5 +0.125 = 27+2° =0.101
+° 0.1875 =0.125 + 0.0625 = 2°+2% = 0.0011
+
+e Please note that with the fractional conversion
+you might not always have an exact
+equiva
