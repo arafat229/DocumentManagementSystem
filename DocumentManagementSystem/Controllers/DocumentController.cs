@@ -15,6 +15,10 @@ using System.Xml;
 using System;
 using System.IO;
 using IronOcr;
+using Patagames.Ocr;
+using Patagames.Ocr.Enums;
+using SautinSoft.Document;
+
 
 namespace DocumentManagementSystem.Mapper;
 
@@ -45,21 +49,21 @@ public class DocumentController : ControllerBase
         try
         {
             var fileFromDb = new MyFile();
-            List<MyFile> FileList = new();
+            List<MyFile> filesToReturn = new();
 
 
 
             if (!string.IsNullOrEmpty(fileForSerach.Name))
             {
                 fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Name.Contains(fileForSerach.Name));
-                FileList.Add(fileFromDb);
+                filesToReturn.Add(fileFromDb);
             }
 
 
             if (fileForSerach.Id > 0)
             {
                 fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Id == fileForSerach.Id);
-                FileList.Add(fileFromDb);
+                filesToReturn.Add(fileFromDb);
             }
 
 
@@ -67,45 +71,41 @@ public class DocumentController : ControllerBase
             if (!string.IsNullOrEmpty(fileForSerach.Description))
             {
                 fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Description.Contains(fileForSerach.Description));
-                FileList.Add(fileFromDb);
+                filesToReturn.Add(fileFromDb);
             }
             if (fileForSerach.CreatedAt is not null)
             {
                 fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.CreatedAt == fileForSerach.CreatedAt);
-                FileList.Add(fileFromDb);
+                filesToReturn.Add(fileFromDb);
             }
             if (fileForSerach.UpdatedAt is not null)
             {
                 fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.UpdatedAt == fileForSerach.UpdatedAt);
             }
+              
             if (!string.IsNullOrEmpty(fileForSerach.SearchingTerm))
             {
+                fileForSerach.SearchingTerm = fileForSerach.SearchingTerm.ToLower().Trim();
 
-                string path = "C:\\Users\\ASAKE\\source\\repos\\DocumentManagementSystem\\DocumentManagementSystem\\Uploads\\";
+                List<MyFile> files = await dbContext.MyFiles.Where(f =>
+                f.Name.ToLower().Contains(fileForSerach.SearchingTerm) ||
+                f.Description.ToLower().Contains(fileForSerach.SearchingTerm) ||
+                f.Extractedtext.ToLower().Contains(fileForSerach.SearchingTerm)).ToListAsync();
+                   
 
-                var files = System.IO.Directory.GetFiles(path);
-                foreach (var file in files)
-                {
-                    var text = System.IO.File.ReadAllText(file);
-                    if(text.Contains(fileForSerach.SearchingTerm))
-                    {
-                        fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.File == file);
-                        FileList.Add(fileFromDb);
-
-                    }
-
-                }
-
+                foreach(var file in files)
+                   filesToReturn.Add(file);
+                   
             }
             
 
-            if (fileFromDb is null)
+            if (!filesToReturn.Any())
                 return BadRequest(CallResult.Error("Non existing file"));
 
            
             
 
-            return Ok(CallResult.Ok(data: FileList));
+            return Ok(CallResult.Ok(data: filesToReturn));
             
         }
         catch (Exception ex)
@@ -153,29 +153,38 @@ public class DocumentController : ControllerBase
 
         await System.IO.File.WriteAllBytesAsync(destination, fileByte);
 
-        var ocr = new IronTesseract();
 
-        using (var ocrInput = new OcrInput())
-        {
-            if (!extension.Contains(".pdf"))
-                ocrInput.LoadImage(destination);
-            else
-                ocrInput.LoadPdf(destination);
+        /*
+                string text = "";
 
-            var ocrResult = ocr.Read(ocrInput);
+                var ocr = new IronTesseract();
+
+                using (var ocrInput = new OcrInput())
+                {
+                    if (!extension.Contains(".pdf"))
+                        ocrInput.LoadImage(destination);
+                    else
+                        ocrInput.LoadPdf(destination);
+
+                    var ocrResult = ocr.Read(ocrInput);
+
+
+
+
+
+                    StreamWriter writer = new(text);
+
+                    writer.WriteLine(ocrResult.Text);
+
 
             
 
-           
-           
-          StreamWriter writer = new (destination);
+                }
+        */
+         
 
-          writer.WriteLine(ocrResult.Text);
-            
-           
-              
+      
 
-        }
 
         var document = new MyFile
         {
@@ -183,8 +192,9 @@ public class DocumentController : ControllerBase
             Description = dto.Description,
             CreatedAt = DateTime.Now,
             userId = Convert.ToInt64(HttpContext.User.FindFirstValue("UserId")),
-            File = destination
-          
+            File = destination,
+            Extractedtext = text
+
         };
 
 
@@ -261,7 +271,7 @@ public class DocumentController : ControllerBase
 
                 await System.IO.File.WriteAllBytesAsync(destination, fileByte);
 
-                var ocr = new IronTesseract();
+             /*   var ocr = new IronTesseract();
 
                 using (var ocrInput = new OcrInput())
                 {
@@ -282,7 +292,7 @@ public class DocumentController : ControllerBase
 
 
                 }
-
+*/
             }
 
             fileFromDb.UpdatedAt = DateTime.UtcNow;

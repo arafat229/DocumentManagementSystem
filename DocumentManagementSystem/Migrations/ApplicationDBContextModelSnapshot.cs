@@ -36,6 +36,10 @@ namespace DocumentManagementSystem.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Extractedtext")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("File")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
