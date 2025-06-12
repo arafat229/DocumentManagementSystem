@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="Freeware.Pdf2Png" Version="1.0.1" />
     <PackageReference Include="Hashids.net" Version="1.7.0" />
     <PackageReference Include="IronOcr" Version="2025.6.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.3" />
@@ -34,6 +35,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="Tesseract" Version="5.2.0" />
     <PackageReference Include="Tesseract.Net.SDK" Version="4.6.411" />
+    <PackageReference Include="TesseractOCR" Version="5.5.1" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="FileUpdates\" />

@@ -18,6 +18,9 @@ using IronOcr;
 using Patagames.Ocr;
 using Patagames.Ocr.Enums;
 using SautinSoft.Document;
+using TesseractOCR;
+using TesseractOCR.Enums;
+using SixLabors.ImageSharp.Formats.Png;
 
 
 namespace DocumentManagementSystem.Mapper;
@@ -51,33 +54,18 @@ public class DocumentController : ControllerBase
             var fileFromDb = new MyFile();
             List<MyFile> filesToReturn = new();
 
-
-
-            if (!string.IsNullOrEmpty(fileForSerach.Name))
-            {
-                fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Name.Contains(fileForSerach.Name));
-                filesToReturn.Add(fileFromDb);
-            }
-
-
             if (fileForSerach.Id > 0)
             {
                 fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Id == fileForSerach.Id);
                 filesToReturn.Add(fileFromDb);
             }
 
-
-
-            if (!string.IsNullOrEmpty(fileForSerach.Description))
-            {
-                fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Description.Contains(fileForSerach.Description));
-                filesToReturn.Add(fileFromDb);
-            }
             if (fileForSerach.CreatedAt is not null)
             {
                 fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.CreatedAt == fileForSerach.CreatedAt);
                 filesToReturn.Add(fileFromDb);
             }
+
             if (fileForSerach.UpdatedAt is not null)
             {
                 fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.UpdatedAt == fileForSerach.UpdatedAt);
@@ -154,36 +142,21 @@ public class DocumentController : ControllerBase
         await System.IO.File.WriteAllBytesAsync(destination, fileByte);
 
 
-        /*
-                string text = "";
+        if (!Path.GetExtension(destination).Contains(".png"))
+        {
+            byte[] png = Freeware.Pdf2Png.Convert(stream,1);
 
-                var ocr = new IronTesseract();
+            await System.IO.File.WriteAllBytesAsync(destination, png);
 
-                using (var ocrInput = new OcrInput())
-                {
-                    if (!extension.Contains(".pdf"))
-                        ocrInput.LoadImage(destination);
-                    else
-                        ocrInput.LoadPdf(destination);
-
-                    var ocrResult = ocr.Read(ocrInput);
+        }
 
 
+        using var engine = new Engine(@"C:\Users\ASAKE\source\repos\DocumentManagementSystem\DocumentManagementSystem\bin\Debug\net9.0\tessdata", Language.English,EngineMode.Default);
+        using var img = TesseractOCR.Pix.Image.LoadFromFile(destination);
+        using var page = engine.Process(img);
 
+        string text = page.Text;
 
-
-                    StreamWriter writer = new(text);
-
-                    writer.WriteLine(ocrResult.Text);
-
-
-            
-
-                }
-        */
-         
-
-      
 
 
         var document = new MyFile
