@@ -244,28 +244,21 @@ public class DocumentController : ControllerBase
 
                 await System.IO.File.WriteAllBytesAsync(destination, fileByte);
 
-             /*   var ocr = new IronTesseract();
-
-                using (var ocrInput = new OcrInput())
+                if (!Path.GetExtension(destination).Contains(".png"))
                 {
-                    if (!extension.Contains(".pdf"))
-                        ocrInput.LoadImage(destination);
-                    else
-                        ocrInput.LoadPdf(destination);
+                    byte[] png = Freeware.Pdf2Png.Convert(stream, 1);
 
-                    var ocrResult = ocr.Read(ocrInput);
-
-
-
-                    StreamWriter writer = new(destination);
-
-                    writer.WriteLine(ocrResult.Text);
-
-
-
+                    await System.IO.File.WriteAllBytesAsync(destination, png);
 
                 }
-*/
+
+                using var engine = new Engine(@"C:\Users\ASAKE\source\repos\DocumentManagementSystem\DocumentManagementSystem\bin\Debug\net9.0\tessdata", Language.English, EngineMode.Default);
+                using var img = TesseractOCR.Pix.Image.LoadFromFile(destination);
+                using var page = engine.Process(img);
+
+                string text = page.Text;
+
+                fileFromDb.Extractedtext = text;
             }
 
             fileFromDb.UpdatedAt = DateTime.UtcNow;

@@ -9,8 +9,8 @@ namespace DocumentManagementSystem.DTOs.DocumentsDtos
 
        
         public long Id { get; set; }
-       
-        public string? SearchingTerm { get; set; }
+
+        public string SearchingTerm { get; set; } = null!;
 
         [DisplayFormat(DataFormatString ="{0:MM/dd/yyyy}",ApplyFormatInEditMode =true)]
          public DateTime? CreatedAt { get; set; }

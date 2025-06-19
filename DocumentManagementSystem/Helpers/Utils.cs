@@ -64,15 +64,21 @@ namespace DocumentManagementSystem.Helpers
         }
         public static string GeneratePassword(int lenght)
         {
-            List<char> chars = new List<char>();
-
+            const string lowerCaseLetter = "abcdefghijklmnopqrstuvwxyz";
+            const string numericValue = "0123456789";
+               const string upperCaseLetter ="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                const string  nonAlphabeticValue="!@#$%^&*()_?[}]{=";
+                           
             StringBuilder sb = new StringBuilder();
             Random random = new Random();
             int j = 0;
             while (j < lenght)
             {
-                sb.Append(chars[random.Next(0, chars.Count)]);
-                j++;
+                sb.Append(numericValue[random.Next(numericValue.Length)]);
+                sb.Append(lowerCaseLetter[random.Next(lowerCaseLetter.Length)]);
+                sb.Append(upperCaseLetter[random.Next(upperCaseLetter.Length)]);
+                sb.Append(nonAlphabeticValue[random.Next(nonAlphabeticValue.Length)]);
+                j+=4;
             }
             return sb.ToString();
 

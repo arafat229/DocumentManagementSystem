@@ -107,25 +107,27 @@ namespace DocumentManagementSystem.Data
                         new Claim(Constants.Privilege, r)).Wait());
 
                 }
-                else
-                {
-                    foreach(var r in roles)
+               
+             }
+              else
+              {
+                    foreach (var r in roles)
                     {
 
 
-                        var exist = context.RoleClaims.FirstOrDefault(x => x.RoleId == existingAdminRole.Id && r == x.ClaimValue);
-                        if(exist == null)
-                        {
-                            var newClaim = new RoleClaim { RoleId = existingAdminRole.Id, ClaimValue = r, ClaimType = Constants.Privilege };
-                            context.RoleClaims.Add(newClaim);
-                           context.SaveChangesAsync();
-                        }
+                     var exist = context.RoleClaims.FirstOrDefault(x => x.RoleId == existingAdminRole.Id && x.ClaimValue == r);
+                      if (exist == null)
+                      {
+                        var newClaim = new RoleClaim { RoleId = existingAdminRole.Id, ClaimValue = r, ClaimType = Constants.Privilege };
+                        context.RoleClaims.Add(newClaim);
+                        context.SaveChangesAsync();
+
+                      }
                     }
-                        
 
-                }
-             }
 
+              }
+            
             }
         
 

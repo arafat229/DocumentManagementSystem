@@ -13,6 +13,7 @@ namespace DocumentManagementSystem.DTOs.Account
         [Required]
         public string Username { get; set; } = null!;
         public string Role { get; set; } = null!;
+
         [EmailAddress]
         public string Email { get; set; } = null!;
         [Required]

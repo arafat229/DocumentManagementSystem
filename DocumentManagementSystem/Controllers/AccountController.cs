@@ -10,8 +10,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Drawing;
 using System.Net.WebSockets;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Security.Cryptography.Xml;
 using static DocumentManagementSystem.Helpers.Utils;
@@ -25,7 +27,7 @@ public class AccountController : ControllerBase
 
     private readonly IConfiguration config;
     private readonly IMapper mappper;
- //   private readonly IHashids hashids;
+    //   private readonly IHashids hashids;
     private readonly UserManager<User> userManager;
     private readonly RoleManager<Role> roleManager;
     private readonly SignInManager<User> signInManager;
@@ -81,10 +83,10 @@ public class AccountController : ControllerBase
                     Message = "Failed to create a user Account                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ount"
                 });
 
-           /* user = await dbContext.Users.FirstOrDefaultAsync(x => x.PhoneNumber == registerForDto.PhoneNumber);
-            if (user is null)
-                return BadRequest(CallResult.Error("Failed to save the account "));
-*/
+            /* user = await dbContext.Users.FirstOrDefaultAsync(x => x.PhoneNumber == registerForDto.PhoneNumber);
+             if (user is null)
+                 return BadRequest(CallResult.Error("Failed to save the account "));
+ */
             var roleResult = await userManager.AddToRoleAsync(userToCreate, registerForDto.Role);
 
             if (!roleResult.Succeeded)
@@ -95,7 +97,9 @@ public class AccountController : ControllerBase
                  Message = "something went wrong",
                  Data = roleResult.Errors
              });
+            
 */
+
             await dbContext.SaveChangesAsync();
             return Ok(CallResult.Ok("Account created succesfully"));
         }
@@ -180,13 +184,13 @@ public class AccountController : ControllerBase
     [HttpPost("create/role")]
     public async Task<IActionResult> CreateRole(RoleDto dto)
     {
-        
+
 
         var role = await roleManager.FindByNameAsync(dto.Name);
         if (role is not null)
             return BadRequest(CallResult.Error("existing role"));
 
-        role = new Role() { Name = dto.Name};
+        role = new Role() { Name = dto.Name.Trim().ToTitleCase(), NormalizedName=dto.Name.Trim().ToUpper() };
 
         var res = await roleManager.CreateAsync(role);
 
@@ -195,10 +199,10 @@ public class AccountController : ControllerBase
 
         var existingClaims = await roleManager.GetClaimsAsync(role);
 
-        foreach(var claim in dto.Claims.Distinct().ToList())
+        foreach (var claim in dto.Claims.Distinct().ToList())
         {
 
-            if(! existingClaims.Any(x=>x.Value==claim))
+            if (!existingClaims.Any(x => x.Value == claim))
             {
                 roleManager.AddClaimAsync(role, new Claim(Constants.Privilege, claim)).Wait();
             }
@@ -209,7 +213,7 @@ public class AccountController : ControllerBase
         role.createdAt = DateTime.UtcNow;
 
         await dbContext.Roles.AddAsync(role);
-        if(await dbContext.SaveChangesAsync()<=0)
+        if (await dbContext.SaveChangesAsync() <= 0)
             return BadRequest(CallResult.Error(string.Join("", res.Errors.Select(x => x.Description))));
 
 
@@ -218,8 +222,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("users/list")]
-  //  [Authorize(Policy = "SuperAdmim")]
-    public async Task<IActionResult>GetUsers(PaginationDto? dto)
+    //  [Authorize(Policy = "SuperAdmin")]
+    public async Task<IActionResult> GetUsers(PaginationDto? dto)
     {
         try
         {
@@ -229,16 +233,16 @@ public class AccountController : ControllerBase
                 .AsNoTracking(), dto.PageNumber, dto.PageSize);
 
             List<UserForListDto> result = new List<UserForListDto>();
-           
+
 
             foreach (var user in pageUser)
             {
                 var userToReturn = new UserForListDto
                 {
                     PhoneNumber = user.PhoneNumber,
-                    FullName  = user.FullName,
+                    FullName = user.FullName,
                     UserName = user.UserName,
-                    Email = user.Email      
+                    Email = user.Email
                 };
 
                 var role = await userManager.GetRolesAsync(user);
@@ -248,8 +252,8 @@ public class AccountController : ControllerBase
 
                 result.Add(userToReturn);
             }
-            
-         
+
+
 
 
             return Ok(CallResult.Ok(data: result));
@@ -258,12 +262,445 @@ public class AccountController : ControllerBase
         {
             Console.WriteLine(ex.StackTrace);
             return BadRequest(CallResult.Error(ex.Message));
-            
+
         }
-       
+
 
     }
 
+
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetUser(int userId)
+    {
+        try
+        {
+            var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            if (user is null)
+                return NotFound("User not found");
+
+            var userToReturn = new UserDetailsDto
+            {
+                Id = user.Id.ToString(),
+                Username = user.UserName,
+                Fullname = user.FullName,
+                PhoneNumber = user.PhoneNumber,
+                Email = user.Email,
+                IsActive = user.IsActive
+            };
+            var roles = await userManager.GetRolesAsync(user);
+            if (roles.Count() >= 1)
+                userToReturn.Role = roles[0];
+
+            /* var permissions = await userManager.GetClaimsAsync(user);
+
+             foreach (var permission in permissions)
+                 userToReturn.Permission.Add(permission.ToString());
+     */
+
+
+
+            return Ok(CallResult.Ok(data: userToReturn));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.StackTrace);
+            return BadRequest(CallResult.Error(ex.Message));
+            throw;
+        }
+
+
+    }
+
+
+    [HttpPut("user/{userId}")]
+    public async Task<IActionResult> UpdateUser(int userId, UserForUpdateDto dto)
+    {
+        try
+        {
+
+            var userFromDB = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            if (userFromDB is null)
+                return NotFound(CallResult.Error("User cannot be found"));
+
+            if (!userFromDB.IsActive)
+                return BadRequest(CallResult.Error("user is desactivated"));
+
+
+            if (dto.Username == null && dto.FullName == null
+                && dto.PhoneNumber == null && dto.Role == null && dto.Email == null)
+                return BadRequest(CallResult.Error("No data for update"));
+
+            if (!string.IsNullOrEmpty(dto.FullName))
+                userFromDB.FullName = dto.FullName.ToLower().Trim();
+
+            if (!string.IsNullOrEmpty(dto.Username))
+                userFromDB.UserName = dto.Username.ToLower().Trim();
+
+            if (!string.IsNullOrEmpty(dto.PhoneNumber))
+                userFromDB.PhoneNumber = dto.PhoneNumber.Trim();
+
+            if (!string.IsNullOrEmpty(dto.Email))
+                userFromDB.Email = dto.Email.Trim();
+
+
+            if (!string.IsNullOrEmpty(dto.Role))
+            {
+                dto.Role = dto.Role.Trim();
+                var role = await roleManager.FindByNameAsync(dto.Role);
+
+
+                if (role is null)
+                    return BadRequest(CallResult.Error("role not supported "));
+
+                var res = await userManager.RemoveFromRolesAsync(userFromDB, userFromDB.Roles);
+
+                if (!res.Succeeded)
+                    return BadRequest(CallResult.Error("failed to remove existing roles"));
+
+                var result = await userManager.AddToRoleAsync(userFromDB, dto.Role);
+                if (!result.Succeeded)
+                    return BadRequest(CallResult.Error("failed to update role "));
+
+                userFromDB.UpdatedAt = DateTime.UtcNow;
+
+
+                dbContext.Users.Update(userFromDB);
+
+                await dbContext.SaveChangesAsync();
+
+
+                return Ok(CallResult.Ok("user updated successfully"));
+            }
+
+
+            userFromDB.UpdatedAt = DateTime.UtcNow;
+
+            dbContext.Users.Update(userFromDB);
+
+            await dbContext.SaveChangesAsync();
+            return Ok(CallResult.Ok("User updated successfully"));
+
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.StackTrace);
+            return BadRequest(CallResult.Error(ex.Message));
+
+        }
+    }
+    [HttpPut("user/activate/{id}")]
+    public async Task<IActionResult> UserActivation(int id)
+    {
+
+
+        return await Activation(id, true);
+
+    }
+
+
+    [HttpPut("user/desactivate/{userId}")]
+    public async Task<IActionResult> UserDesactivation(int userId)
+    {
+        return await Activation(userId, false);
+
+    }
+
+
+
+    [ApiExplorerSettings(IgnoreApi = true)]
+    private async Task<IActionResult> Activation(int userId, bool Activated)
+    {
+        var userFromDB = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+
+        if (userFromDB is null)
+            return BadRequest(CallResult.Error("user not found"));
+
+        if (Activated == true)
+        {
+            userFromDB.IsActive = true;
+
+        }
+
+        if (Activated == false)
+        {
+            userFromDB.IsActive = false;
+
+        }
+
+        userFromDB.UpdatedAt = DateTime.UtcNow.ToUniversalTime();
+        dbContext.Users.Update(userFromDB);
+
+        if (await dbContext.SaveChangesAsync() <= 0)
+            return BadRequest(CallResult.Error("Failed to save changes"));
+
+        return Ok(CallResult.Ok());
+    }
+
+
+    [HttpPost("user/change-password/{userId}")]
+    public async Task<IActionResult> ChangePassword(string userId, ChangePasswordDto dto)
+    {
+
+        if (!User.IsUserAllowed(userId))
+            return Unauthorized();
+
+        var userFromDb = await dbContext.Users.FirstOrDefaultAsync(x => x.Id.ToString() == userId);
+
+        if (userFromDb is null)
+            return BadRequest(CallResult.Error("user not found"));
+
+        var result = await userManager.ChangePasswordAsync(userFromDb, dto.OldPassword, dto.NewPassword);
+
+        if (!result.Succeeded)
+            return BadRequest(CallResult.Error("Failed to change the password"));
+
+        userFromDb.UpdatedAt = DateTime.UtcNow.ToUniversalTime();
+
+        dbContext.Users.Update(userFromDb);
+
+
+        await dbContext.SaveChangesAsync();
+
+
+        return Ok(CallResult.Ok("password changed successfully"));
+
+    }
+
+
+    [HttpPost("user/reset-password/{userId}")]
+    public async Task<IActionResult> ResetPassword(string userId)
+    {
+        var userFromDb = await dbContext.Users.FirstOrDefaultAsync(x => x.Id.ToString() == userId);
+
+        if (userFromDb is null)
+            return NotFound(CallResult.Error("user not found"));
+
+        if (!userFromDb.IsActive)
+            return BadRequest(CallResult.Error("user desactivated"));
+
+        var res = await userManager.RemovePasswordAsync(userFromDb);
+
+        if (!res.Succeeded)
+            return BadRequest(CallResult.Error(string.Join(",", res.Errors.Select(x => x.Description))));
+
+        var password = Utils.GeneratePassword(12);
+
+        var result = await userManager.AddPasswordAsync(userFromDb, password);
+
+        if (!result.Succeeded)
+            return BadRequest(CallResult.Error(string.Join(",", result.Errors.Select(x => x.Description))));
+
+        userFromDb.UpdatedAt = DateTime.UtcNow.ToUniversalTime();
+
+        dbContext.Users.Update(userFromDb);
+
+        if (await dbContext.SaveChangesAsync() <= 0)
+            return BadRequest(CallResult.Error("Failed to saved changes"));
+
+
+        return Ok(CallResult.Ok("password reset successfully ", data: password));
+
+    }
+
+
+    [HttpDelete("user/{userId}")]
+    public async Task<IActionResult>DeleteUser(string userId)
+    {
+        var delation = await IsDeleted(userId, true);
+
+        return Ok(CallResult.Ok("user deleted successfully"));
+
+    }
+
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<IActionResult>IsDeleted (string userId, bool delete)
+    {
+        var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id.ToString() == userId);
+
+        if (user is null)
+            return NotFound(CallResult.Error("user not found"));
+
+        if(delete == true)
+        {
+            user.IsDeleted = true;
+
+            user.IsActive = false;
+
+        }
+
+        user.UpdatedAt = DateTime.UtcNow.ToUniversalTime();
+
+        dbContext.Users.Update(user);
+
+        if (await dbContext.SaveChangesAsync() <= 0)
+            return BadRequest(CallResult.Error("Failed to save changes"));
+
+        return Ok(CallResult.Ok());
+
+    }
+
+
+    [HttpGet("claims")]
+    public async Task<IActionResult> Claims()
+    {
+        List<Claim> Claims = new();
+
+        var roles = await dbContext.Roles.ToListAsync();
+
+        foreach (var role in roles)
+        {
+
+            var roleClaims = await roleManager.GetClaimsAsync(role);
+            Claims.AddRange(roleClaims);
+
+
+        }
+        return Ok(CallResult.Ok(data: Claims.Select(x => x.Value).Distinct().ToList()));
+
+    }
+
+
+    [HttpGet("roles/list")]
+    public async Task<IActionResult> GetAllRoles()
+    {
+
+
+
+
+        var roles = await roleManager.Roles.Include(x => x.RoleClaims).ToListAsync();
+        foreach (var role in roles)
+        {
+            var roleClaims = await roleManager.GetClaimsAsync(role);
+            role.Claims = roleClaims.Select(x => x.Value).ToList();
+
+
+        }
+        var res = roles.Select(x => new
+        {
+            x.Id,
+            x.Name,
+            x.NormalizedName,
+            roleClaims = x.Claims
+        }).ToList();
+        return Ok(CallResult.Ok(data: res));
+    }
+
+
+    [HttpGet("role/{roleId}")]
+    public async Task<IActionResult> Role(string roleId)
+    {
+        var role = await roleManager.FindByIdAsync(roleId);
+
+        if (role is null)
+            return NotFound(CallResult.Error("role not found"));
+
+
+        var roleClaim = await roleManager.GetClaimsAsync(role);
+
+        role.Claims = roleClaim.Select(x => x.Value).ToList();
+
+
+
+        return Ok(CallResult.Ok(data: role));
+    }
+
+
+    [HttpPut("role/{roleId}")]
+    public async Task<IActionResult> RoleUpdate(string roleId, RoleDto dto)
+    {
+
+        if (dto.Claims == null || !dto.Claims.Any() && string.IsNullOrEmpty(dto.Name))
+            return BadRequest(CallResult.Error("No content for update"));
+
+        var existingRole = await roleManager.Roles.Include(x => x.RoleClaims).FirstOrDefaultAsync(x => x.Id.ToString() == roleId);
+
+
+        if (existingRole is null)
+            return NotFound(CallResult.Error("role not found"));
+
+
+        if (!string.IsNullOrEmpty(dto.Name))
+        {
+            var role = await roleManager.FindByNameAsync(dto.Name);
+
+            if (role is not null)
+                return BadRequest(CallResult.Error("Role with this name already exists "));
+
+            existingRole.Name = dto.Name.Trim().ToTitleCase();
+            existingRole.NormalizedName = dto.Name.Trim().ToUpper();
+
+            existingRole.UpdateAt = DateTime.UtcNow.ToUniversalTime();
+
+        }
+
+        foreach (var claim in dto.Claims.Distinct().ToList())
+        {
+            if (!string.IsNullOrEmpty(claim))
+            {
+                var existingClaims = await roleManager.GetClaimsAsync(existingRole);
+
+                foreach (var existingClaim in existingClaims)
+                {
+                    await roleManager.RemoveClaimAsync(existingRole, existingClaim);
+
+                }
+
+                foreach (var item in dto.Claims.Distinct().ToList())
+                {
+                    await roleManager.AddClaimAsync(existingRole, new Claim(Constants.Privilege, item));
+
+                }
+                existingRole.UpdateAt = DateTime.UtcNow.ToUniversalTime();
+            }
+
+        }
+
+
+
+        dbContext.Roles.Update(existingRole);
+
+        if (await dbContext.SaveChangesAsync() <= 0)
+            return BadRequest(CallResult.Error("No Content for update"));
+
+        return Ok(CallResult.Ok("role updated successfully"));
+
+
+    }
+
+
+    [HttpDelete("role/{roleId}")]
+    public async Task<IActionResult>Delete(string roleId)
+    {
+        var role = await roleManager.Roles.Include(x => x.RoleClaims).FirstOrDefaultAsync(x => x.Id.ToString() == roleId);
+
+        if (role is null)
+            return NotFound(CallResult.Error("role not found"));
+
+        var roleClaims = await roleManager.GetClaimsAsync(role);
+
+        foreach (var claim in roleClaims)
+        {
+            await roleManager.RemoveClaimAsync(role, claim);
+        }
+
+        if (roleClaims.Any())
+            return BadRequest(CallResult.Error("Failed to remove role claims"));
+         
+
+       var result = await roleManager.DeleteAsync(role);
+
+        if (!result.Succeeded)
+            return BadRequest(CallResult.Error("failed to delete the role"));
+
+
+        dbContext.Roles.Update(role);
+
+        if (await dbContext.SaveChangesAsync() <= 0)
+            return BadRequest(CallResult.Error("Failed to save changes"));
+
+        return Ok(CallResult.Ok("role deleted successfully"));
+    }
 
     /* [HttpPost("roles/create")]
 
@@ -648,9 +1085,9 @@ public class AccountController : ControllerBase
                 if (role is null)
                     return NotFound(CallResult.Error("Role not found"));
 
-                var existingRole = await roleManager.FindByNameAsync(roleForCreate.Name);
+                var role = await roleManager.FindByNameAsync(roleForCreate.Name);
 
-                if (existingRole != null && existingRole.Id != role.Id)
+                if (role != null && role.Id != role.Id)
                     return BadRequest(CallResult.Error("Role with the same name already exist"));
 
                 var existingClaims = await roleManager.GetClaimsAsync(role);
