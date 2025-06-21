@@ -51,25 +51,10 @@ public class DocumentController : ControllerBase
     {
         try
         {
-            var fileFromDb = new MyFile();
-            List<MyFile> filesToReturn = new();
+           
 
-            if (fileForSerach.Id > 0)
-            {
-                fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Id == fileForSerach.Id);
-                filesToReturn.Add(fileFromDb);
-            }
+            List<MyFile> FileList = new();
 
-            if (fileForSerach.CreatedAt is not null)
-            {
-                fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.CreatedAt == fileForSerach.CreatedAt);
-                filesToReturn.Add(fileFromDb);
-            }
-
-            if (fileForSerach.UpdatedAt is not null)
-            {
-                fileFromDb = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.UpdatedAt == fileForSerach.UpdatedAt);
-            }
               
             if (!string.IsNullOrEmpty(fileForSerach.SearchingTerm))
             {
@@ -82,19 +67,28 @@ public class DocumentController : ControllerBase
                    
 
                 foreach(var file in files)
-                   filesToReturn.Add(file);
+                   FileList.Add(file);
                    
             }
             
 
-            if (!filesToReturn.Any())
-                return BadRequest(CallResult.Error("Non existing file"));
+            if (!FileList.Any())
+                return NotFound(CallResult.Error("Non existing file"));
 
+            var res = FileList.Select(x => new
+            {
+                x.Id,
+                x.Name,
+                x.Description,
+                x.File,
+                x.CreatedAt
+                
+            }).ToList();
            
             
-
-            return Ok(CallResult.Ok(data: filesToReturn));
+            return Ok(CallResult.Ok(data:res));
             
+
         }
         catch (Exception ex)
         {
@@ -118,7 +112,7 @@ public class DocumentController : ControllerBase
         if (size == 0)
             return BadRequest(CallResult.Error("empty File"));
 
-        List<string> validExtension = [ ".pdf", ".jpg"];
+        List<string> validExtension = [".pdf", ".jpg"];
 
         var extension = Path.GetExtension(dto.File.FileName);
 
