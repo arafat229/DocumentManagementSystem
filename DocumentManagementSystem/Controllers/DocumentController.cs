@@ -65,13 +65,18 @@ public class DocumentController : ControllerBase
                 f.Description.ToLower().Contains(fileForSerach.SearchingTerm) ||
                 f.Extractedtext.ToLower().Contains(fileForSerach.SearchingTerm)).ToListAsync();
 
-                var count = fileList.Count();
+            var result = files.Select(x => new 
+                        {
+                          x.Name,
+                          x.Description,
+                          x.File,
+                          x.CreatedAt
+                        }).ToList();
 
-                fileList.RemoveRange(0, count);
-
-                fileList.AddRange(files);
+                return Ok(CallResult.Ok(data: result));
             }
             
+
             var res = fileList.Select(x => new
             {
                 x.Name,
