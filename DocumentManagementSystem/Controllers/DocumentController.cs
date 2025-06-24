@@ -47,7 +47,7 @@ public class DocumentController : ControllerBase
     }
 
     [HttpGet("Search")]
-    public async Task<IActionResult> SearchFile([FromQuery] FileForSerachDto fileForSerach)
+    public async Task<IActionResult> SearchFile([FromQuery] FileForSerachDto fileForSearch)
     {
         try
         {
@@ -55,15 +55,15 @@ public class DocumentController : ControllerBase
             List<MyFile> fileList = await dbContext.MyFiles.ToListAsync();
 
               
-            if (!string.IsNullOrEmpty(fileForSerach.SearchingTerm))
+            if (!string.IsNullOrEmpty(fileForSearch.SearchingTerm))
             {   
 
-                fileForSerach.SearchingTerm = fileForSerach.SearchingTerm.ToLower().Trim();
+                fileForSearch.SearchingTerm = fileForSearch.SearchingTerm.ToLower().Trim();
 
                 List<MyFile> files = await dbContext.MyFiles.Where(f =>
-                f.Name.ToLower().Contains(fileForSerach.SearchingTerm) ||
-                f.Description.ToLower().Contains(fileForSerach.SearchingTerm) ||
-                f.Extractedtext.ToLower().Contains(fileForSerach.SearchingTerm)).ToListAsync();
+                f.Name.ToLower().Contains(fileForSearch.SearchingTerm) ||
+                f.Description.ToLower().Contains(fileForSearch.SearchingTerm) ||
+                f.Extractedtext.ToLower().Contains(fileForSearch.SearchingTerm)).ToListAsync();
 
             var result = files.Select(x => new 
                         {
