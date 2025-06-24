@@ -270,11 +270,11 @@ public class AccountController : ControllerBase
 
 
     [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetUser(int userId)
+    public async Task<IActionResult> GetUser(string userId)
     {
         try
         {
-            var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id.ToString() == userId);
             if (user is null)
                 return NotFound("User not found");
 
@@ -313,12 +313,12 @@ public class AccountController : ControllerBase
 
 
     [HttpPut("user/{userId}")]
-    public async Task<IActionResult> UpdateUser(int userId, UserForUpdateDto dto)
+    public async Task<IActionResult> UpdateUser(string userId, UserForUpdateDto dto)
     {
         try
         {
 
-            var userFromDB = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            var userFromDB = await dbContext.Users.FirstOrDefaultAsync(x => x.Id.ToString() == userId);
             if (userFromDB is null)
                 return NotFound(CallResult.Error("User cannot be found"));
 
@@ -389,8 +389,9 @@ public class AccountController : ControllerBase
 
         }
     }
+
     [HttpPut("user/activate/{id}")]
-    public async Task<IActionResult> UserActivation(int id)
+    public async Task<IActionResult> UserActivation(string id)
     {
 
 
@@ -400,7 +401,7 @@ public class AccountController : ControllerBase
 
 
     [HttpPut("user/desactivate/{userId}")]
-    public async Task<IActionResult> UserDesactivation(int userId)
+    public async Task<IActionResult> UserDesactivation(string userId)
     {
         return await Activation(userId, false);
 
@@ -409,9 +410,9 @@ public class AccountController : ControllerBase
 
 
     [ApiExplorerSettings(IgnoreApi = true)]
-    private async Task<IActionResult> Activation(int userId, bool Activated)
+    private async Task<IActionResult> Activation(string userId, bool Activated)
     {
-        var userFromDB = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        var userFromDB = await dbContext.Users.FirstOrDefaultAsync(x => x.Id.ToString() == userId);
 
         if (userFromDB is null)
             return BadRequest(CallResult.Error("user not found"));

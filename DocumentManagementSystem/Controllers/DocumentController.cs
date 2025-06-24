@@ -51,23 +51,12 @@ public class DocumentController : ControllerBase
     {
         try
         {
-
-   
-
-            List<MyFile> fileList = new();
-
-            if (string.IsNullOrEmpty(fileForSerach.SearchingTerm))
-            {
-                List<MyFile> filesFromDb = await dbContext.MyFiles.ToListAsync();
-
-                fileList.AddRange(filesFromDb);
-              
-            }
+             
+            List<MyFile> fileList = await dbContext.MyFiles.ToListAsync();
 
               
             if (!string.IsNullOrEmpty(fileForSerach.SearchingTerm))
-            {
-             
+            {   
 
                 fileForSerach.SearchingTerm = fileForSerach.SearchingTerm.ToLower().Trim();
 
@@ -76,12 +65,13 @@ public class DocumentController : ControllerBase
                 f.Description.ToLower().Contains(fileForSerach.SearchingTerm) ||
                 f.Extractedtext.ToLower().Contains(fileForSerach.SearchingTerm)).ToListAsync();
 
-                foreach(var file in files)
-                   fileList.Add(file);
-                   
+                var count = fileList.Count();
+
+                fileList.RemoveRange(0, count);
+
+                fileList.AddRange(files);
             }
             
-
             var res = fileList.Select(x => new
             {
                 x.Name,
