@@ -51,33 +51,39 @@ public class DocumentController : ControllerBase
     {
         try
         {
-           
 
-            List<MyFile> FileList = new();
+   
+
+            List<MyFile> fileList = new();
+
+            if (string.IsNullOrEmpty(fileForSerach.SearchingTerm))
+            {
+                List<MyFile> filesFromDb = await dbContext.MyFiles.ToListAsync();
+
+                fileList.AddRange(filesFromDb);
+              
+            }
 
               
             if (!string.IsNullOrEmpty(fileForSerach.SearchingTerm))
             {
+             
+
                 fileForSerach.SearchingTerm = fileForSerach.SearchingTerm.ToLower().Trim();
 
                 List<MyFile> files = await dbContext.MyFiles.Where(f =>
                 f.Name.ToLower().Contains(fileForSerach.SearchingTerm) ||
                 f.Description.ToLower().Contains(fileForSerach.SearchingTerm) ||
                 f.Extractedtext.ToLower().Contains(fileForSerach.SearchingTerm)).ToListAsync();
-                   
 
                 foreach(var file in files)
-                   FileList.Add(file);
+                   fileList.Add(file);
                    
             }
             
 
-            if (!FileList.Any())
-                return NotFound(CallResult.Error("Non existing file"));
-
-            var res = FileList.Select(x => new
+            var res = fileList.Select(x => new
             {
-                x.Id,
                 x.Name,
                 x.Description,
                 x.File,
@@ -277,12 +283,12 @@ public class DocumentController : ControllerBase
 
 
     [HttpDelete("DeleteFile/{id}")]
-    public async Task<IActionResult> DeleteFile(long id )
+    public async Task<IActionResult> DeleteFile(string id )
     {
-        var fileFromDB = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Id == id);
+        var fileFromDB = await dbContext.MyFiles.FirstOrDefaultAsync(x => x.Id.ToString() == id);
 
         if (fileFromDB is null)
-            BadRequest(CallResult.Error("Can't find the File you are trying to access"));
+         return BadRequest(CallResult.Error("Can't find the File you are trying to access"));
 
 
             dbContext.MyFiles.Remove(fileFromDB);
