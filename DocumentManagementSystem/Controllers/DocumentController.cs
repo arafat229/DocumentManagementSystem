@@ -47,7 +47,7 @@ public class DocumentController : ControllerBase
     }
 
     [HttpGet("Search")]
-    public async Task<IActionResult> SearchFile([FromQuery] FileForSerachDto fileForSearch)
+    public async Task<IActionResult> SearchFile([FromQuery] FileForSearchDto fileForSearch)
     {
         try
         {

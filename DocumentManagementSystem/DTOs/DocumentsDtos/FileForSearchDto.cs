@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace DocumentManagementSystem.DTOs.DocumentsDtos
 {
-    public record FileForSerachDto
+    public record FileForSearchDto
     {
 
         public string? SearchingTerm { get; set; } 
