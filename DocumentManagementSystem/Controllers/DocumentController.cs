@@ -51,16 +51,10 @@ public class DocumentController : ControllerBase
     {
         try
         {
-            var userId = Convert.ToString(HttpContext.User.FindFirstValue("UserId"));
+            var userId = Convert.ToInt64(HttpContext.User.FindFirstValue("UserId"));
 
-            if (userId is null)
+            if (userId == 0)
                 return Unauthorized(CallResult.Error("user not authenticated"));
-
-
-            List<MyFile> fileList = await dbContext.MyFiles
-                .Where(f => f.userId.ToString() == userId)
-                .ToListAsync();
-
               
             if (!string.IsNullOrEmpty(fileForSearch.SearchingTerm))
             {   
@@ -68,8 +62,8 @@ public class DocumentController : ControllerBase
                 fileForSearch.SearchingTerm = fileForSearch.SearchingTerm.ToLower().Trim();
 
                 List<MyFile> files = await dbContext.MyFiles.Where(f =>
-                ( f.userId.ToString() == userId) && (
-                f.Name.ToLower().Contains(fileForSearch.SearchingTerm) ||
+                ( f.userId == userId) &&
+                (f.Name.ToLower().Contains(fileForSearch.SearchingTerm) ||
                 f.Description.ToLower().Contains(fileForSearch.SearchingTerm) ||
                 f.Extractedtext.ToLower().Contains(fileForSearch.SearchingTerm))).ToListAsync();
 
@@ -83,7 +77,11 @@ public class DocumentController : ControllerBase
 
                 return Ok(CallResult.Ok(data: result));
             }
-            
+
+
+            List<MyFile> fileList = await dbContext.MyFiles
+               .Where(f => f.userId == userId)
+               .ToListAsync();
 
             var res = fileList.Select(x => new
             {
